@@ -11,9 +11,13 @@
 	streamSaver = {
 		createWriteStream,
 		supported: false,
+		started: false,
+		closed: false,
+		writes: 0,
+		length: 0,
 		version: {
-			full: '1.0.0',
-			major: 1, minor: 0, dot: 0
+			full: '1.0.2',
+			major: 1, minor: 0, dot: 2
 		}
 	}
 
@@ -86,8 +90,14 @@
 			}
 		})
 
+		streamSaver.writes = 0
+		streamSaver.length = 0
+
 		return new WritableStream({
 			start(error) {
+				streamSaver.closed = false
+				streamSaver.started = true
+
 				// is called immediately, and should perform any actions
 				// necessary to acquire access to the underlying sink.
 				// If this process is asynchronous, it can return a promise
@@ -95,6 +105,9 @@
 				return setupChannel()
 			},
 			write(chunk) {
+				streamSaver.writes++
+				streamSaver.length += chunk.length
+
 				// is called when a new chunk of data is ready to be written
 				// to the underlying sink. It can return a promise to signal
 				// success or failure of the write operation. The stream
@@ -107,10 +120,20 @@
 				channel.port1.postMessage(chunk)
 			},
 			close() {
+				streamSaver.closed = true
+				streamSaver.started = false
+				streamSaver.writes = 0
+				streamSaver.length = 0
+
 				channel.port1.postMessage('end')
 				console.log('All data successfully read!')
 			},
 			abort(e) {
+				streamSaver.closed = false
+				streamSaver.started = false
+				streamSaver.writes = 0
+				streamSaver.length = 0
+				
 				channel.port1.postMessage('abort')
 			}
 		}, queuingStrategy)
