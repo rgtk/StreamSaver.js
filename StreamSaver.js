@@ -16,8 +16,8 @@
 		writes: 0,
 		length: 0,
 		version: {
-			full: '1.0.1',
-			major: 1, minor: 0, dot: 1
+			full: '1.0.2',
+			major: 1, minor: 0, dot: 2
 		}
 	}
 
@@ -95,6 +95,7 @@
 
 		return new WritableStream({
 			start(error) {
+				streamSaver.closed = false
 				streamSaver.started = true
 
 				// is called immediately, and should perform any actions
